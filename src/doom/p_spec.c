@@ -412,26 +412,20 @@ void P_CrossSpecialLine(int linenum, int side, mobj_t *thing) {
 
     line = &lines[linenum];
 
-    if (gameversion <= exe_doom_1_2) {
-        if (line->special > 98 && line->special != 104) {
+    //	Triggers that other things can activate
+    if (!thing->player) {
+        // Things that should NOT trigger specials...
+        switch (thing->type) {
+        case MT_ROCKET:
+        case MT_PLASMA:
+        case MT_BFG:
+        case MT_TROOPSHOT:
+        case MT_HEADSHOT:
+        case MT_BRUISERSHOT:
             return;
-        }
-    } else {
-        //	Triggers that other things can activate
-        if (!thing->player) {
-            // Things that should NOT trigger specials...
-            switch (thing->type) {
-            case MT_ROCKET:
-            case MT_PLASMA:
-            case MT_BFG:
-            case MT_TROOPSHOT:
-            case MT_HEADSHOT:
-            case MT_BRUISERSHOT:
-                return;
 
-            default:
-                break;
-            }
+        default:
+            break;
         }
     }
 
@@ -1046,7 +1040,7 @@ void P_UpdateSpecials(void) {
 #define DONUT_FLOORHEIGHT_DEFAULT 0x00000000
 #define DONUT_FLOORPIC_DEFAULT 0x16
 
-static void DonutOverrun(fixed_t *s3_floorheight, short *s3_floorpic, line_t *line, sector_t *pillar_sector) {
+static void DonutOverrun(fixed_t *s3_floorheight, short *s3_floorpic) {
     static int first = 1;
     static int tmp_s3_floorheight;
     static int tmp_s3_floorpic;
@@ -1174,7 +1168,7 @@ int EV_DoDonut(line_t *line) {
                                 "NULL back sector. "
                                 "Unexpected behavior may occur in Vanilla Doom.\n");
 
-                DonutOverrun(&s3_floorheight, &s3_floorpic, line, s1);
+                DonutOverrun(&s3_floorheight, &s3_floorpic);
             } else {
                 s3_floorheight = s3->floorheight;
                 s3_floorpic = s3->floorpic;
@@ -1302,7 +1296,7 @@ void P_SpawnSpecials(void) {
 
         case 14:
             // DOOR RAISE IN 5 MINUTES
-            P_SpawnDoorRaiseIn5Mins(sector, i);
+            P_SpawnDoorRaiseIn5Mins(sector);
             break;
 
         case 17:

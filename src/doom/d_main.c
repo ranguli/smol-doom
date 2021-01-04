@@ -377,7 +377,7 @@ void D_RunFrame() {
         } while (tics <= 0);
 
         wipestart = nowtime;
-        wipe = !wipe_ScreenWipe(wipe_Melt, 0, 0, SCREENWIDTH, SCREENHEIGHT, tics);
+        wipe = !wipe_ScreenWipe(wipe_Melt, SCREENWIDTH, SCREENHEIGHT, tics);
         I_UpdateNoBlit();
         M_Drawer();       // menu is drawn even on top of wipes
         I_FinishUpdate(); // page flip or blit buffer
@@ -514,78 +514,7 @@ void D_StartTitle(void) {
     D_AdvanceDemo();
 }
 
-// Strings for dehacked replacements of the startup banner
-//
-// These are from the original source: some of them are perhaps
-// not used in any dehacked patches
-
-static const char *banners[] = {
-    // doom1.wad
-    "                            "
-    "DOOM Shareware Startup v%i.%i"
-    "                           ",
-    // doom.wad
-    "                            "
-    "DOOM Registered Startup v%i.%i"
-    "                           ",
-    // Registered DOOM uses this
-    "                          "
-    "DOOM System Startup v%i.%i"
-    "                          ",
-    // Doom v1.666
-    "                          "
-    "DOOM System Startup v%i.%i66"
-    "                          "};
-
-//
-// Get game name: if the startup banner has been replaced, use that.
-// Otherwise, use the name given
-//
-
-static char *GetGameName(const char *gamename) {
-    size_t i;
-
-    for (i = 0; i < arrlen(banners); ++i) {
-        const char *deh_sub;
-        // Has the banner been replaced?
-
-        deh_sub = banners[i];
-
-        if (deh_sub != banners[i]) {
-            size_t gamename_size;
-            int version;
-            char *deh_gamename;
-
-            // Has been replaced.
-            // We need to expand via printf to include the Doom version number
-            // We also need to cut off spaces to get the basic name
-
-            gamename_size = strlen(deh_sub) + 10;
-            deh_gamename = malloc(gamename_size);
-            if (deh_gamename == NULL) {
-                I_Error("GetGameName: Failed to allocate new string");
-            }
-            version = G_VanillaVersionCode();
-            snprintf(deh_gamename, gamename_size, banners[i], version / 100, version % 100);
-
-            while (deh_gamename[0] != '\0' && isspace(deh_gamename[0])) {
-                memmove(deh_gamename, deh_gamename + 1, gamename_size - 1);
-            }
-
-            while (deh_gamename[0] != '\0' && isspace(deh_gamename[strlen(deh_gamename) - 1])) {
-                deh_gamename[strlen(deh_gamename) - 1] = '\0';
-            }
-
-            return deh_gamename;
-        }
-    }
-
-    return M_StringDuplicate(gamename);
-}
-
-//
-// Find out what version of Doom is playing.
-//
+/** Find out what version of Doom is playing. **/
 
 void D_IdentifyVersion(void) {
     // gamemission is set up by the D_FindIWAD function.  But if
@@ -615,12 +544,7 @@ void D_IdentifyVersion(void) {
 
     if (logical_gamemission == doom) {
         // Doom 1.  But which version?
-
-        if (W_CheckNumForName("E4M1") > 0) {
-            // Ultimate Doom
-
-            gamemode = retail;
-        } else if (W_CheckNumForName("E3M1") > 0) {
+        if (W_CheckNumForName("E3M1") > 0) {
             gamemode = registered;
         } else {
             gamemode = shareware;
@@ -632,18 +556,10 @@ void D_IdentifyVersion(void) {
 
 static void D_SetGameDescription(void) {
     if (logical_gamemission == doom) {
-        // Doom 1.  But which version?
-
-        if (gamevariant == freedoom) {
-            gamedescription = GetGameName("Freedoom: Phase 1");
-        } else if (gamemode == retail) {
-            // Ultimate Doom
-
-            gamedescription = GetGameName("The Ultimate DOOM");
-        } else if (gamemode == registered) {
-            gamedescription = GetGameName("DOOM Registered");
+        if (gamemode == registered) {
+            gamedescription = "DOOM Registered";
         } else if (gamemode == shareware) {
-            gamedescription = GetGameName("DOOM Shareware");
+            gamedescription = "DOOM Shareware";
         }
     }
     if (gamedescription == NULL) {
@@ -663,141 +579,11 @@ static boolean D_AddFile(char *filename) {
     return handle != NULL;
 }
 
-// Copyright message banners
-// Some dehacked mods replace these.  These are only displayed if they are
-// replaced by dehacked.
-
-static const char *copyright_banners[] = {
-    "=========================================================================="
-    "=\n"
-    "ATTENTION:  This version of DOOM has been modified.  If you would like "
-    "to\n"
-    "get a copy of the original game, call 1-800-IDGAMES or see the readme "
-    "file.\n"
-    "        You will not receive technical support for modified games.\n"
-    "                      press enter to continue\n"
-    "=========================================================================="
-    "=\n",
-
-    "=========================================================================="
-    "=\n"
-    "                 Commercial product - do not distribute!\n"
-    "         Please report software piracy to the SPA: 1-800-388-PIR8\n"
-    "=========================================================================="
-    "=\n",
-
-    "=========================================================================="
-    "=\n"
-    "                                Shareware!\n"
-    "=========================================================================="
-    "=\n"};
-
-static struct {
-    const char *description;
-    const char *cmdline;
-    GameVersion_t version;
-} gameversions[] = {
-    {"Doom 1.2", "1.2", exe_doom_1_2},           {"Doom 1.666", "1.666", exe_doom_1_666},
-    {"Doom 1.7/1.7a", "1.7", exe_doom_1_7},      {"Doom 1.8", "1.8", exe_doom_1_8},
-    {"Doom 1.9", "1.9", exe_doom_1_9},           {"Hacx", "hacx", exe_hacx},
-    {"Ultimate Doom", "ultimate", exe_ultimate}, {"Final Doom", "final", exe_final},
-    {"Final Doom (alt)", "final2", exe_final2},  {NULL, NULL, 0},
-};
-
 // Initialize the game version
 
 static void InitGameVersion(void) {
-    byte *demolump;
-    char demolumpname[6];
-    int demoversion;
-    int p;
-    int i;
-    boolean status;
-
-    //!
-    // @arg <version>
-    // @category compat
-    //
-    // Emulate a specific version of Doom.  Valid values are "1.2",
-    // "1.666", "1.7", "1.8", "1.9", "ultimate", "final", "final2",
-
-    p = M_CheckParmWithArgs("-gameversion", 1);
-
-    if (p) {
-        for (i = 0; gameversions[i].description != NULL; ++i) {
-            if (!strcmp(myargv[p + 1], gameversions[i].cmdline)) {
-                gameversion = gameversions[i].version;
-                break;
-            }
-        }
-
-        if (gameversions[i].description == NULL) {
-            printf("Supported game versions:\n");
-
-            for (i = 0; gameversions[i].description != NULL; ++i) {
-                printf("\t%s (%s)\n", gameversions[i].cmdline, gameversions[i].description);
-            }
-
-            I_Error("Unknown game version '%s'", myargv[p + 1]);
-        }
-    } else {
-        // Determine automatically
-
-        if (gamemode == shareware || gamemode == registered) {
-            // original
-            gameversion = exe_doom_1_9;
-
-            // Detect version from demo lump
-            for (i = 1; i <= 3; ++i) {
-                M_snprintf(demolumpname, 6, "demo%i", i);
-                if (W_CheckNumForName(demolumpname) > 0) {
-                    demolump = W_CacheLumpName(demolumpname, PU_STATIC);
-                    demoversion = demolump[0];
-                    W_ReleaseLumpName(demolumpname);
-                    status = true;
-                    switch (demoversion) {
-                    case 0:
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                        gameversion = exe_doom_1_2;
-                        break;
-                    case 106:
-                        gameversion = exe_doom_1_666;
-                        break;
-                    case 107:
-                        gameversion = exe_doom_1_7;
-                        break;
-                    case 108:
-                        gameversion = exe_doom_1_8;
-                        break;
-                    case 109:
-                        gameversion = exe_doom_1_9;
-                        break;
-                    default:
-                        status = false;
-                        break;
-                    }
-                    if (status) {
-                        break;
-                    }
-                }
-            }
-        } else if (gamemode == retail) {
-            gameversion = exe_ultimate;
-        }
-    }
-
-    // Deathmatch 2.0 did not exist until Doom v1.4
-    if (gameversion <= exe_doom_1_2 && deathmatch == 2) {
-        deathmatch = 1;
-    }
-
-    // The original exe does not support retail - 4th episode not supported
-
-    if (gameversion < exe_ultimate && gamemode == retail) {
-        gamemode = registered;
+    if (gamemode == shareware || gamemode == registered) {
+        gameversion = exe_doom_1_9;
     }
 }
 
@@ -828,13 +614,9 @@ void D_DoomMain(void) {
     int p;
     char file[256];
     char demolumpname[9];
-    int numiwadlumps;
 
     I_AtExit(D_Endoom, false);
 
-    // print banner
-
-    I_PrintBanner(PACKAGE_STRING);
 
     printf("Z_Init: Init zone memory allocation daemon. \n");
     Z_Init();
@@ -1011,7 +793,6 @@ void D_DoomMain(void) {
 
     printf("W_Init: Init WADfiles.\n");
     D_AddFile(iwadfile);
-    numiwadlumps = numlumps;
 
     W_CheckCorrectIWAD(doom);
 
@@ -1019,12 +800,6 @@ void D_DoomMain(void) {
     // we're playing and which version of Vanilla Doom we need to emulate.
     D_IdentifyVersion();
     InitGameVersion();
-
-    // Check which IWAD variant we are using.
-
-    if (W_CheckNumForName("FREEDOOM") >= 0) {
-        gamevariant = freedoom;
-    }
 
     if (!M_ParmExists("-noautoload") && gamemode != shareware) {
         char *autoload_dir;
@@ -1036,7 +811,7 @@ void D_DoomMain(void) {
         free(autoload_dir);
 
         // auto-loaded files per IWAD
-        autoload_dir = M_GetAutoloadDir(D_SaveGameIWADName(gamemission, gamevariant));
+        autoload_dir = M_GetAutoloadDir(D_SaveGameIWADName(gamemission));
         W_AutoLoadWADs(autoload_dir);
         free(autoload_dir);
     }
@@ -1103,10 +878,10 @@ void D_DoomMain(void) {
     // we've finished loading Dehacked patches.
     D_SetGameDescription();
 
-    savegamedir = M_GetSaveGameDir(D_SaveGameIWADName(gamemission, gamevariant));
+    savegamedir = M_GetSaveGameDir(D_SaveGameIWADName(gamemission));
 
     // Check for -file in shareware
-    if (modifiedgame && (gamevariant != freedoom)) {
+    if (modifiedgame) {
         // These are the lumps that will be checked in IWAD,
         // if any one is not present, execution will be aborted.
 

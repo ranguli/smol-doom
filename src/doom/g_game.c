@@ -519,7 +519,7 @@ void G_DoLoadLevel(void) {
         memset(players[i].frags, 0, sizeof(players[i].frags));
     }
 
-    P_SetupLevel(gameepisode, gamemap, 0, gameskill);
+    P_SetupLevel(gameepisode, gamemap);
     displayplayer = consoleplayer; // view the guy you are playing
     gameaction = ga_nothing;
     Z_CheckHeap();
@@ -882,7 +882,7 @@ void G_PlayerReborn(int player) {
 
     p->usedown = p->attackdown = true; // don't do anything immediately
     p->playerstate = PST_LIVE;
-    p->health =  MAXHEALTH; // Use dehacked value
+    p->health =  MAXHEALTH;
     p->readyweapon = p->pendingweapon = wp_pistol;
     p->weaponowned[wp_fist] = true;
     p->weaponowned[wp_pistol] = true;
@@ -1062,14 +1062,6 @@ int pars[4][10] = {{0},
                    {0, 90, 90, 90, 120, 90, 360, 240, 30, 170},
                    {0, 90, 45, 90, 150, 90, 90, 165, 30, 135}};
 
-// DOOM II Par Times
-int cpars[32] = {
-    30,  90,  120, 120, 90,  150, 120, 120, 270, 90,  //  1-10
-    210, 150, 150, 150, 210, 150, 420, 150, 210, 150, // 11-20
-    240, 150, 180, 150, 150, 300, 330, 420, 300, 180, // 21-30
-    120, 30                                           // 31-32
-};
-
 //
 // G_DoCompleted
 //
@@ -1154,7 +1146,7 @@ void G_DoCompleted(void) {
     wminfo.maxsecret = totalsecret;
     wminfo.maxfrags = 0;
 
-    wminfo.partime = TICRATE * cpars[gamemap];
+    wminfo.partime = TICRATE*pars[gameepisode][gamemap];
 
     wminfo.pnum = consoleplayer;
 
@@ -1371,50 +1363,14 @@ void G_InitNew(skill_t skill, int episode, int map) {
         S_ResumeSound();
     }
 
-    /*
-    // Note: This commented-out block of code was added at some point
-    // between the DOS version(s) and the Doom source release. It isn't
-    // found in disassemblies of the DOS version and causes IDCLEV and
-    // the -warp command line parameter to behave differently.
-    // This is left here for posterity.
-
-    // This was quite messy with SPECIAL and commented parts.
-    // Supposedly hacks to make the latest edition work.
-    // It might not work properly.
-    if (episode < 1)
-      episode = 1;
-
-    if ( gamemode == retail )
-    {
-      if (episode > 4)
-        episode = 4;
-    }
-    else if ( gamemode == shareware )
-    {
-      if (episode > 1)
-           episode = 1;	// only start episode 1 on shareware
-    }
-    else
-    {
-      if (episode > 3)
-        episode = 3;
-    }
-    */
-
     if (skill > sk_nightmare)
         skill = sk_nightmare;
 
-    if (gameversion >= exe_ultimate) {
-        if (episode == 0) {
-            episode = 4;
-        }
-    } else {
-        if (episode < 1) {
-            episode = 1;
-        }
-        if (episode > 3) {
-            episode = 3;
-        }
+    if (episode < 1) {
+        episode = 1;
+    }
+    if (episode > 3) {
+        episode = 3;
     }
 
     if (episode > 1 && gamemode == shareware) {
@@ -1621,21 +1577,6 @@ void G_RecordDemo(const char *name) {
     demorecording = true;
 }
 
-// Get the demo version code appropriate for the version set in gameversion.
-int G_VanillaVersionCode(void) {
-    switch (gameversion) {
-    case exe_doom_1_666:
-        return 106;
-    case exe_doom_1_7:
-        return 107;
-    case exe_doom_1_8:
-        return 108;
-    case exe_doom_1_9:
-    default: // All other versions are variants on v1.9:
-        return 109;
-    }
-}
-
 void G_BeginRecording(void) {
     int i;
 
@@ -1654,14 +1595,14 @@ void G_BeginRecording(void) {
 
     if (longtics) {
         *demo_p++ = DOOM_191_VERSION;
-    } else if (gameversion > exe_doom_1_2) {
-        *demo_p++ = G_VanillaVersionCode();
+    } else {
+        *demo_p++ = DOOM_VERSION;
     }
 
     *demo_p++ = gameskill;
     *demo_p++ = gameepisode;
     *demo_p++ = gamemap;
-    if (longtics || gameversion > exe_doom_1_2) {
+    if (longtics) {
         *demo_p++ = deathmatch;
         *demo_p++ = respawnparm;
         *demo_p++ = fastparm;
@@ -1743,7 +1684,7 @@ void G_DoPlayDemo(void) {
     // hacked "v1.91" doom exe. This is a non-vanilla extension.
     if (D_NonVanillaPlayback(demoversion == DOOM_191_VERSION, lumpnum, "Doom 1.91 demo format")) {
         longtics = true;
-    } else if (demoversion != G_VanillaVersionCode() && !(gameversion <= exe_doom_1_2 && olddemo)) {
+    } else if (demoversion != DOOM_VERSION && !(olddemo)) {
         const char *message = "Demo is from a different game version!\n"
                               "(read %i, should be %i)\n"
                               "\n"
@@ -1753,7 +1694,7 @@ void G_DoPlayDemo(void) {
                               "/info/patches.php\n"
                               "    This appears to be %s.";
 
-        I_Error(message, demoversion, G_VanillaVersionCode(), DemoVersionDescription(demoversion));
+        I_Error(message, demoversion, DOOM_VERSION, DemoVersionDescription(demoversion));
     }
 
     skill = *demo_p++;

@@ -115,8 +115,6 @@ char savegamestrings[10][SAVESTRINGSIZE];
 
 char endstring[160];
 
-static boolean opldev;
-
 //
 // MENU TYPEDEFS
 //
@@ -159,26 +157,26 @@ menu_t *currentMenu;
 //
 // PROTOTYPES
 //
-static void M_NewGame(int choice);
+static void M_NewGame();
 static void M_Episode(int choice);
 static void M_ChooseSkill(int choice);
-static void M_LoadGame(int choice);
-static void M_SaveGame(int choice);
-static void M_Options(int choice);
-static void M_EndGame(int choice);
-static void M_ReadThis(int choice);
-static void M_ReadThis2(int choice);
-static void M_QuitDOOM(int choice);
+static void M_LoadGame();
+static void M_SaveGame();
+static void M_Options();
+static void M_EndGame();
+static void M_ReadThis();
+static void M_ReadThis2();
+static void M_QuitDOOM();
 
-static void M_ChangeMessages(int choice);
+static void M_ChangeMessages();
 static void M_ChangeSensitivity(int choice);
 static void M_SfxVol(int choice);
 static void M_MusicVol(int choice);
-static void M_ChangeDetail(int choice);
+static void M_ChangeDetail();
 static void M_SizeDisplay(int choice);
-static void M_Sound(int choice);
+static void M_Sound();
 
-static void M_FinishReadThis(int choice);
+static void M_FinishReadThis();
 static void M_LoadSelect(int choice);
 static void M_SaveSelect(int choice);
 static void M_ReadSaveStrings(void);
@@ -399,7 +397,7 @@ void M_LoadSelect(int choice) {
 //
 // Selected from DOOM menu
 //
-void M_LoadGame(int choice) {
+void M_LoadGame() {
     if (netgame) {
         M_StartMessage(LOADNET, NULL, false);
         return;
@@ -443,7 +441,7 @@ void M_DoSave(int slot) {
 // Generate a default save slot name when the user saves to
 // an empty slot via the joypad.
 //
-static void SetDefaultSaveName(int slot) {
+static void SetDefaultSaveName() {
     // map from IWAD or PWAD?
     if (W_IsIWADLump(maplumpinfo) && strcmp(savegamedir, "")) {
         M_snprintf(savegamestrings[itemOn], SAVESTRINGSIZE, "%s", maplumpinfo->name);
@@ -491,7 +489,7 @@ void M_SaveSelect(int choice) {
 //
 // Selected from DOOM menu
 //
-void M_SaveGame(int choice) {
+void M_SaveGame() {
     if (!usergame) {
         M_StartMessage(SAVEDEAD, NULL, false);
         return;
@@ -576,16 +574,7 @@ void M_DrawReadThis1(void) {
 void M_DrawReadThis2(void) {
     inhelpscreens = true;
 
-    // We only ever draw the second page if this is
-    // gameversion == exe_doom_1_9 and gamemode == registered
-
     V_DrawPatchDirect(0, 0, W_CacheLumpName("HELP1", PU_CACHE));
-}
-
-void M_DrawReadThisCommercial(void) {
-    inhelpscreens = true;
-
-    V_DrawPatchDirect(0, 0, W_CacheLumpName("HELP", PU_CACHE));
 }
 
 //
@@ -599,7 +588,9 @@ void M_DrawSound(void) {
     M_DrawThermo(SoundDef.x, SoundDef.y + LINEHEIGHT * (music_vol + 1), 16, musicVolume);
 }
 
-void M_Sound(int choice) { M_SetupNextMenu(&SoundDef); }
+void M_Sound() {
+    M_SetupNextMenu(&SoundDef);
+}
 
 void M_SfxVol(int choice) {
     switch (choice) {
@@ -644,7 +635,7 @@ void M_DrawNewGame(void) {
     V_DrawPatchDirect(54, 38, W_CacheLumpName("M_SKILL", PU_CACHE));
 }
 
-void M_NewGame(int choice) {
+void M_NewGame() {
     if (netgame && !demoplayback) {
         M_StartMessage(NEWGAME, NULL, false);
         return;
@@ -709,14 +700,14 @@ void M_DrawOptions(void) {
     M_DrawThermo(OptionsDef.x, OptionsDef.y + LINEHEIGHT * (scrnsize + 1), 9, screenSize);
 }
 
-void M_Options(int choice) { M_SetupNextMenu(&OptionsDef); }
+void M_Options() {
+    M_SetupNextMenu(&OptionsDef);
+}
 
 //
 //      Toggle messages on/off
 //
-void M_ChangeMessages(int choice) {
-    // warning: unused parameter `int choice'
-    choice = 0;
+void M_ChangeMessages() {
     showMessages = 1 - showMessages;
 
     if (!showMessages)
@@ -739,8 +730,7 @@ void M_EndGameResponse(int key) {
     D_StartTitle();
 }
 
-void M_EndGame(int choice) {
-    choice = 0;
+void M_EndGame() {
     if (!usergame) {
         S_StartSound(NULL, sfx_oof);
         return;
@@ -757,18 +747,15 @@ void M_EndGame(int choice) {
 //
 // M_ReadThis
 //
-void M_ReadThis(int choice) {
-    choice = 0;
+void M_ReadThis() {
     M_SetupNextMenu(&ReadDef1);
 }
 
-void M_ReadThis2(int choice) {
-    choice = 0;
+void M_ReadThis2() {
     M_SetupNextMenu(&ReadDef2);
 }
 
-void M_FinishReadThis(int choice) {
-    choice = 0;
+void M_FinishReadThis() {
     M_SetupNextMenu(&MainDef);
 }
 
@@ -799,7 +786,7 @@ static const char *M_SelectEndMessage(void) {
     return endmsg[gametic % NUM_QUITMESSAGES];
 }
 
-void M_QuitDOOM(int choice) {
+void M_QuitDOOM() {
     snprintf(endstring, sizeof(endstring), "%s\n\n" DOSY, M_SelectEndMessage());
 
     M_StartMessage(endstring, M_QuitResponse, true);
@@ -818,8 +805,7 @@ void M_ChangeSensitivity(int choice) {
     }
 }
 
-void M_ChangeDetail(int choice) {
-    choice = 0;
+void M_ChangeDetail() {
     detailLevel = 1 - detailLevel;
 
     R_SetViewSize(screenblocks, detailLevel);
@@ -997,7 +983,7 @@ boolean M_Responder(event_t *ev) {
             M_QuitResponse(key_menu_confirm);
         } else {
             S_StartSound(NULL, sfx_swtchn);
-            M_QuitDOOM(0);
+            M_QuitDOOM();
         }
 
         return true;
@@ -1207,10 +1193,7 @@ boolean M_Responder(event_t *ev) {
         {
             M_StartControlPanel();
 
-            if (gameversion >= exe_ultimate)
-                currentMenu = &ReadDef2;
-            else
-                currentMenu = &ReadDef1;
+            currentMenu = &ReadDef1;
 
             itemOn = 0;
             S_StartSound(NULL, sfx_swtchn);
@@ -1236,7 +1219,7 @@ boolean M_Responder(event_t *ev) {
             return true;
         } else if (key == key_menu_detail) // Detail toggle
         {
-            M_ChangeDetail(0);
+            M_ChangeDetail();
             S_StartSound(NULL, sfx_swtchn);
             return true;
         } else if (key == key_menu_qsave) // Quicksave
@@ -1251,7 +1234,7 @@ boolean M_Responder(event_t *ev) {
             return true;
         } else if (key == key_menu_messages) // Toggle messages
         {
-            M_ChangeMessages(0);
+            M_ChangeMessages();
             S_StartSound(NULL, sfx_swtchn);
             return true;
         } else if (key == key_menu_qload) // Quickload
@@ -1262,7 +1245,7 @@ boolean M_Responder(event_t *ev) {
         } else if (key == key_menu_quit) // Quit DOOM
         {
             S_StartSound(NULL, sfx_swtchn);
-            M_QuitDOOM(0);
+            M_QuitDOOM();
             return true;
         } else if (key == key_menu_gamma) // gamma toggle
         {
@@ -1514,26 +1497,9 @@ void M_Init(void) {
     messageLastMenuActive = menuactive;
     quickSaveSlot = -1;
 
-    // Here we could catch other version dependencies,
-    //  like HELP1/2, and four episodes.
-
-    // The same hacks were used in the original Doom EXEs.
-
-    if (gameversion >= exe_ultimate) {
-        MainMenu[readthis].routine = M_ReadThis2;
-        ReadDef2.prevMenu = NULL;
-    }
-
-    if (gameversion >= exe_final && gameversion <= exe_final2) {
-        ReadDef2.routine = M_DrawReadThisCommercial;
-    }
-
     // Versions of doom.exe before the Ultimate Doom release only had
     // three episodes; if we're emulating one of those then don't try
     // to show episode four. If we are, then do show episode four
     // (should crash if missing).
-    if (gameversion < exe_ultimate) {
-        EpiDef.numitems--;
-    }
-    opldev = M_CheckParm("-opldev") > 0;
+    EpiDef.numitems--;
 }
