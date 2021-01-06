@@ -1,3 +1,11 @@
+/**
+ * @file net_sdl.c
+ * @brief Networking module which uses SDL_net
+ *
+ * @defgroup net Networking code
+ * @{
+ */
+
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -10,9 +18,6 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
-// DESCRIPTION:
-//     Networking module which uses SDL_net
 //
 
 #include <stdio.h>
@@ -28,10 +33,6 @@
 #include "net_packet.h"
 #include "net_sdl.h"
 #include "z_zone.h"
-
-//
-// NETWORKING
-//
 
 #include <SDL_net.h>
 
@@ -50,8 +51,9 @@ typedef struct {
 static addrpair_t **addr_table;
 static int addr_table_size = -1;
 
-// Initializes the address table
-
+/** @brief Initializes the address table.
+ *  @param[out] addr_table
+ */
 static void NET_SDL_InitAddrTable(void) {
     addr_table_size = 16;
 
@@ -59,11 +61,26 @@ static void NET_SDL_InitAddrTable(void) {
     memset(addr_table, 0, sizeof(addrpair_t *) * addr_table_size);
 }
 
-static boolean AddressesEqual(IPaddress *a, IPaddress *b) { return a->host == b->host && a->port == b->port; }
 
-// Finds an address by searching the table.  If the address is not found,
-// it is added to the table.
+/** @brief Compares to IP addresses for equality
+ *
+ *  Compares both the `host` and `port` member of each struct
+ *  and returns true if both are equal to each other respectively.
+ *
+ *  @remarks Utilizes the `IPaddress` struct from <a href=https://www.libsdl.org/projects/SDL_net/docs/SDL_net_49.html>SDL</a>
+ *  @param[in] a The first IP address to compare
+ *  @param[in] b The second IP address to compare
+ */
+static boolean AddressesEqual(IPaddress *a, IPaddress *b) {
+    return a->host == b->host && a->port == b->port;
+}
 
+/** @brief Finds an address by searching the address table.
+ *         If the address is not found, it is added to the table.
+ *  @param[in] addr
+ *  @param[out] addr_table_size
+ *  @param[out] addr_table
+ */
 static net_addr_t *NET_SDL_FindAddress(IPaddress *addr) {
     addrpair_t *new_entry;
     int empty_entry = -1;
@@ -242,6 +259,12 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet) {
     }
 }
 
+/**
+ * @brief Recieve a UDP packet.
+ * @param[in,out] addr
+ * @param[in,out] packet
+ * @return Status code, returning `true` if packets were recieved.
+ */
 static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet) {
     int result;
 
@@ -268,6 +291,13 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet) {
 
     return true;
 }
+
+/**
+ * @brief Converts a host, IP address, and port to a human-readable string.
+ * @param[in] net_addr_t *addr
+ * @param[in] buffer
+ * @param[in] buffer_len
+ */
 
 void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len) {
     IPaddress *ip;
@@ -328,3 +358,6 @@ net_module_t net_sdl_module = {
     NET_SDL_InitClient,   NET_SDL_InitServer,  NET_SDL_SendPacket,     NET_SDL_RecvPacket,
     NET_SDL_AddrToString, NET_SDL_FreeAddress, NET_SDL_ResolveAddress,
 };
+
+
+/** @} */
