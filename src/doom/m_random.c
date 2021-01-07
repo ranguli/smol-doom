@@ -41,16 +41,20 @@ int prndindex = 0;
 
 // Which one is deterministic?
 int P_Random(void) {
-    prndindex = (prndindex + 1) & 0xff;
+    // The bitwise AND causes the index to roll over from 255 back to 0.
+    prndindex = (prndindex + 1) & 255;
     return rndtable[prndindex];
 }
 
 int M_Random(void) {
-    rndindex = (rndindex + 1) & 0xff;
+    // The bitwise AND causes the index to roll over from 255 back to 0.
+    rndindex = (rndindex + 1) & 255;
     return rndtable[rndindex];
 }
 
-void M_ClearRandom(void) { rndindex = prndindex = 0; }
+void M_ClearRandom(void) {
+    rndindex = prndindex = 0;
+}
 
 // inspired by the same routine in Eternity, thanks haleyjd
 int P_SubRandom(void) {

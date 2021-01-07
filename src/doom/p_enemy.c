@@ -1,3 +1,11 @@
+/**
+ * @file p_enemy.c
+ * @brief Enemy game logic (thinking, ai) and Action Pointer Functions that are
+ *        associated with states/frames
+ * @defgroup enemylogic Enemy game logic
+ * @{
+ */
+
 //
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
@@ -11,11 +19,6 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
-// DESCRIPTION:
-//	Enemy thinking, AI.
-//	Action Pointer Functions
-//	that are associated with states/frames.
 //
 
 #include <stdio.h>
@@ -70,14 +73,13 @@ void A_Fall(mobj_t *actor);
 // but some can be made preaware
 //
 
-//
-// Called by P_NoiseAlert.
-// Recursively traverse adjacent sectors,
-// sound blocking lines cut off traversal.
-//
 
 mobj_t *soundtarget;
 
+/**
+ * @brief Called by `P_NoiseAlert()`. Recursively traverse adjacent sectors,
+ *        sound blocking lines cut off traversal.
+ */
 void P_RecursiveSound(sector_t *sec, int soundblocks) {
     int i;
     line_t *check;
@@ -115,20 +117,21 @@ void P_RecursiveSound(sector_t *sec, int soundblocks) {
     }
 }
 
-//
-// P_NoiseAlert
-// If a monster yells at a player,
-// it will alert other monsters to the player.
-//
+/**
+ * @brief If a monster yells at a player, it will alert other monsters to the player.
+ */
 void P_NoiseAlert(mobj_t *target, mobj_t *emmiter) {
     soundtarget = target;
     validcount++;
     P_RecursiveSound(emmiter->subsector->sector, 0);
 }
 
-//
-// P_CheckMeleeRange
-//
+/**
+ * @brief Determine if an actor is close enough to its currently assigned target
+ *        for a melee attack.
+ * @param[in] actor The actor whos `target` member should be checked.
+ * @return Whether or not the target of `actor` is within melee range.
+ */
 boolean P_CheckMeleeRange(mobj_t *actor) {
     mobj_t *pl;
     fixed_t dist;
@@ -398,11 +401,12 @@ void P_NewChaseDir(mobj_t *actor) {
     actor->movedir = DI_NODIR; // can not move
 }
 
-//
-// P_LookForPlayers
-// If allaround is false, only look 180 degrees in front.
-// Returns true if a player is targeted.
-//
+/**
+ * @brief Detect the player
+ *
+ * If  `allaround` is false, only look 180 degrees in front.
+ * @returns Returns true if a player is targeted.
+ */
 boolean P_LookForPlayers(mobj_t *actor, boolean allaround) {
     int c;
     int stop;
@@ -481,10 +485,9 @@ void A_KeenDie(mobj_t *mo) {
 // ACTION ROUTINES
 //
 
-//
-// A_Look
-// Stay in state until a player is sighted.
-//
+/**
+ * @brief Stay in state until a player is sighted.
+ */
 void A_Look(mobj_t *actor) {
     mobj_t *targ;
 
@@ -536,11 +539,9 @@ seeyou:
     P_SetMobjState(actor, actor->info->seestate);
 }
 
-//
-// A_Chase
-// Actor has a melee attack,
-// so it tries to close as fast as possible
-//
+/**
+ * @brief Actor has a melee attack,
+ */
 void A_Chase(mobj_t *actor) {
     int delta;
 
@@ -918,15 +919,14 @@ void A_SkelFist(mobj_t *actor) {
     }
 }
 
-//
-// PIT_VileCheck
-// Detect a corpse that could be raised.
-//
 mobj_t *corpsehit;
 mobj_t *vileobj;
 fixed_t viletryx;
 fixed_t viletryy;
 
+/**
+ * @brief Detect a corpse that could be raised.
+ */
 boolean PIT_VileCheck(mobj_t *thing) {
     int maxdist;
     boolean check;
@@ -957,10 +957,9 @@ boolean PIT_VileCheck(mobj_t *thing) {
     return false; // got one, so stop checking
 }
 
-//
-// A_VileChase
-// Check for ressurecting a body
-//
+/**
+ * @brief Check for ressurecting a body
+ */
 void A_VileChase(mobj_t *actor) {
     int xl;
     int xh;
@@ -1019,12 +1018,13 @@ void A_VileChase(mobj_t *actor) {
 //
 // A_VileStart
 //
-void A_VileStart(mobj_t *actor) { S_StartSound(actor, sfx_vilatk); }
+void A_VileStart(mobj_t *actor) {
+    S_StartSound(actor, sfx_vilatk);
+}
 
-//
-// A_Fire
-// Keep fire in front of player unless out of sight
-//
+/**
+ * @brief Keep fire in front of player unless out of sight
+ */
 void A_Fire(mobj_t *actor);
 
 void A_StartFire(mobj_t *actor) {
@@ -1061,10 +1061,9 @@ void A_Fire(mobj_t *actor) {
     P_SetThingPosition(actor);
 }
 
-//
-// A_VileTarget
-// Spawn the hellfire
-//
+/**
+ * @brief Make Arch-vile spawn a hellfire
+ */
 void A_VileTarget(mobj_t *actor) {
     mobj_t *fog;
 
@@ -1081,9 +1080,9 @@ void A_VileTarget(mobj_t *actor) {
     A_Fire(fog);
 }
 
-//
-// A_VileAttack
-//
+/**
+ * @brief Arch-vile attack logic
+ */
 void A_VileAttack(mobj_t *actor) {
     mobj_t *fire;
     int an;
@@ -1113,19 +1112,16 @@ void A_VileAttack(mobj_t *actor) {
     P_RadiusAttack(fire, actor, 70);
 }
 
-//
-// Mancubus attack,
-// firing three missiles (bruisers)
-// in three different directions?
-// Doesn't look like it.
-//
 #define FATSPREAD (ANG90 / 8)
-
 void A_FatRaise(mobj_t *actor) {
     A_FaceTarget(actor);
     S_StartSound(actor, sfx_manatk);
 }
 
+/**
+ * @brief Mancubus attack firing three missiles (bruisers) in three different directions?
+ * @remarks Doesn't look like it.
+ */
 void A_FatAttack1(mobj_t *actor) {
     mobj_t *mo;
     mobj_t *target;
@@ -1185,12 +1181,12 @@ void A_FatAttack3(mobj_t *actor) {
     mo->momy = FixedMul(mo->info->speed, finesine[an]);
 }
 
-//
-// SkullAttack
-// Fly at the player like a missile.
-//
+//! Defines the speed at which a Skull flies
 #define SKULLSPEED (20 * FRACUNIT)
 
+/**
+ * @brief Fly at the player like a missile.
+ */
 void A_SkullAttack(mobj_t *actor) {
     mobj_t *dest;
     angle_t an;
@@ -1215,10 +1211,9 @@ void A_SkullAttack(mobj_t *actor) {
     actor->momz = (dest->z + (dest->height >> 1) - actor->z) / dist;
 }
 
-//
-// A_PainShootSkull
-// Spawn a lost soul and launch it at the target
-//
+/**
+ * @brief Spawn a lost soul and launch it at the target
+ */
 void A_PainShootSkull(mobj_t *actor, angle_t angle) {
     fixed_t x;
     fixed_t y;
@@ -1268,10 +1263,9 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle) {
     A_SkullAttack(newmobj);
 }
 
-//
-// A_PainAttack
-// Spawn a lost soul and launch it at the target
-//
+/**
+ * @brief Spawn a lost soul and launch it at the target
+ */
 void A_PainAttack(mobj_t *actor) {
     if (!actor->target)
         return;
@@ -1280,6 +1274,9 @@ void A_PainAttack(mobj_t *actor) {
     A_PainShootSkull(actor, actor->angle);
 }
 
+/**
+ * @brief Spawn lost souls upon death
+ */
 void A_PainDie(mobj_t *actor) {
     A_Fall(actor);
     A_PainShootSkull(actor, actor->angle + ANG90);
@@ -1333,17 +1330,17 @@ void A_Fall(mobj_t *actor) {
     // are meant to be obstacles.
 }
 
-//
-// A_Explode
-//
-void A_Explode(mobj_t *thingy) { P_RadiusAttack(thingy, thingy->target, 128); }
+void A_Explode(mobj_t *thingy) {
+    P_RadiusAttack(thingy, thingy->target, 128);
+}
 
-// Check whether the death of the specified monster type is allowed
-// to trigger the end of episode special action.
-//
-// This behavior changed in v1.9, the most notable effect of which
-// was to break uac_dead.wad
 
+/**
+ * @brief Check whether the death of the specified monster type is allowed
+ *        to trigger the end of episode special action.
+ * @remark This behavior changed in v1.9, the most notable effect of which
+ *         was to break uac_dead.wad
+ */
 static boolean CheckBossEnd(mobjtype_t motype) {
     if (gamemap != 8) {
         return false;
@@ -1358,11 +1355,9 @@ static boolean CheckBossEnd(mobjtype_t motype) {
     return true;
 }
 
-//
-// A_BossDeath
-// Possibly trigger special effects
-// if on first boss level
-//
+/**
+ * @brief Possibly trigger special effects if on first boss level
+ */
 void A_BossDeath(mobj_t *mo) {
     thinker_t *th;
     mobj_t *mo2;
@@ -1614,9 +1609,14 @@ void A_SpawnFly(mobj_t *mo) {
     P_RemoveMobj(mo);
 }
 
+/**
+ * @brief Cue the players death scream sound effect
+ */
 void A_PlayerScream(mobj_t *mo) {
     // Default death sound.
     int sound = sfx_pldeth;
 
     S_StartSound(mo, sound);
 }
+/** @} */
+

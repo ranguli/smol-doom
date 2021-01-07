@@ -114,7 +114,9 @@ void HU_Init(void) {
     }
 }
 
-void HU_Stop(void) { headsupactive = false; }
+void HU_Stop(void) {
+    headsupactive = false;
+}
 
 void HU_Start(void) {
 

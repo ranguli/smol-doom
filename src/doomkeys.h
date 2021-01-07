@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//       Key definitions
+//       Keyboard key definitions
 //
 
 #ifndef __DOOMKEYS__

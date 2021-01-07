@@ -1,3 +1,11 @@
+/**
+ * @file net_server.c
+ * @brief Network server code
+ *
+ * @defgroup servernet Server-side networking code
+ * @{
+ */
+
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -10,8 +18,6 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
-// Network server code
 //
 
 #include <stdarg.h>
@@ -153,21 +159,30 @@ static net_client_recv_t recvwindow[BACKUPTICS][NET_MAXPLAYERS];
 
 #define NET_SV_ExpandTicNum(b) NET_ExpandTicNum(recvwindow_start, (b))
 
+
+/**
+ * @brief Disconnects a given client from the server.
+ * @param[in] client The client to disconnect
+ */
 static void NET_SV_DisconnectClient(net_client_t *client) {
     if (client->active) {
         NET_Conn_Disconnect(&client->connection);
     }
 }
 
+/**
+ * @brief Check that a client is properly connected (ie. not in the process of connecting or disconnecting).
+ * @param[in] client The client to check the connection status of.
+ * @return Whether or not `client` is connected.
+ */
 static boolean ClientConnected(net_client_t *client) {
-    // Check that the client is properly connected: ie. not in the
-    // process of connecting or disconnecting
 
     return client->active && client->connection.state == NET_CONN_STATE_CONNECTED;
 }
 
-// Send a message to be displayed on a client's console
-
+/**
+ * @brief Send a message to be displayed on a client's console
+ */
 static void NET_SV_SendConsoleMessage(net_client_t *client, const char *s, ...) PRINTF_ATTR(2, 3);
 static void NET_SV_SendConsoleMessage(net_client_t *client, const char *s, ...) {
     char buf[1024];
@@ -183,8 +198,9 @@ static void NET_SV_SendConsoleMessage(net_client_t *client, const char *s, ...) 
     NET_WriteString(packet, buf);
 }
 
-// Send a message to all clients
-
+/**
+ * @brief Send a message to all clients
+ */
 static void NET_SV_BroadcastMessage(const char *s, ...) PRINTF_ATTR(1, 2);
 static void NET_SV_BroadcastMessage(const char *s, ...) {
     char buf[1024];
@@ -204,8 +220,10 @@ static void NET_SV_BroadcastMessage(const char *s, ...) {
     printf("%s\n", buf);
 }
 
-// Assign player numbers to connected clients
-
+/**
+ * @brief Assign player numbers to connected clients
+ * @param[out] clients
+ */
 static void NET_SV_AssignPlayers(void) {
     int i;
     int pl;
@@ -229,8 +247,10 @@ static void NET_SV_AssignPlayers(void) {
     }
 }
 
-// Returns the number of players currently connected.
-
+/**
+ * @brief Gets the number of players currently connected.
+ * @returns The numbers of players currently connected.
+ */
 static int NET_SV_NumPlayers(void) {
     int i;
     int result;
@@ -246,8 +266,10 @@ static int NET_SV_NumPlayers(void) {
     return result;
 }
 
-// Returns the number of players ready to start the game.
-
+/**
+ * @brief Gets the number of players ready to start the game.
+ * @returns The number of players reader to start the game
+ */
 static int NET_SV_NumReadyPlayers(void) {
     int result = 0;
     int i;
@@ -380,9 +402,9 @@ static void NET_SV_SendWaitingData(net_client_t *client) {
     NET_FreePacket(packet);
 }
 
-// Find the latest tic which has been acknowledged as received by
-// all clients.
-
+/**
+ * @return The latest tic which has been acknowledged as received by all clients.
+ */
 static unsigned int NET_SV_LatestAcknowledged(void) {
     unsigned int lowtic = UINT_MAX;
     int i;
@@ -450,7 +472,6 @@ static void NET_SV_AdvanceWindow(void) {
 }
 
 // Given an address, find the corresponding client
-
 static net_client_t *NET_SV_FindClient(net_addr_t *addr) {
     int i;
 
@@ -1752,3 +1773,5 @@ void NET_SV_Shutdown(void) {
         I_Sleep(1);
     }
 }
+/** @} */
+

@@ -103,7 +103,7 @@ char *M_FileCaseExists(const char *path) {
         }
     }
 
-    // 4. lowercase filename with uppercase first letter, e.g. Doom2.wad
+    // 4. lowercase filename with uppercase first letter, e.g. Doom.wad
     if (strlen(filename) > 1) {
         M_ForceLowercase(filename + 1);
 

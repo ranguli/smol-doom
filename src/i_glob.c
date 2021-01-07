@@ -20,44 +20,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
 #include "i_glob.h"
 #include "m_misc.h"
 
-#if defined(HAVE_DIRENT_H)
 #include <dirent.h>
 #include <sys/stat.h>
-#else
-#define NO_DIRENT_IMPLEMENTATION
-#endif
 
-#ifndef NO_DIRENT_IMPLEMENTATION
-
-// Only the fields d_name and (as an XSI extension) d_ino are specified
-// in POSIX.1.  Other than Linux, the d_type field is available mainly
-// only on BSD systems.  The remaining fields are available on many, but
-// not all systems.
 static boolean IsDirectory(char *dir, struct dirent *de) {
-#if defined(_DIRENT_HAVE_D_TYPE)
-    if (de->d_type != DT_UNKNOWN && de->d_type != DT_LNK) {
-        return de->d_type == DT_DIR;
-    } else
-#endif
-    {
-        char *filename;
-        struct stat sb;
-        int result;
+    char *filename;
+    struct stat sb;
+    int result;
 
-        filename = M_StringJoin(dir, DIR_SEPARATOR_S, de->d_name, NULL);
-        result = stat(filename, &sb);
-        free(filename);
+    filename = M_StringJoin(dir, DIR_SEPARATOR_S, de->d_name, NULL);
+    result = stat(filename, &sb);
+    free(filename);
 
-        if (result != 0) {
-            return false;
-        }
-
-        return S_ISDIR(sb.st_mode);
+    if (result != 0) {
+        return false;
     }
+
+    return S_ISDIR(sb.st_mode);
 }
 
 struct glob_s {
@@ -294,15 +276,3 @@ const char *I_NextGlob(glob_t *glob) {
     ++glob->next_index;
     return result;
 }
-
-#else /* #ifdef NO_DIRENT_IMPLEMENTATION */
-
-#warning No native implementation of file globbing.
-
-glob_t *I_StartGlob(const char *directory, const char *glob, int flags) { return NULL; }
-
-void I_EndGlob(glob_t *glob) {}
-
-const char *I_NextGlob(glob_t *glob) { return ""; }
-
-#endif /* #ifdef NO_DIRENT_IMPLEMENTATION */

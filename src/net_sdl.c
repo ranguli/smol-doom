@@ -2,7 +2,7 @@
  * @file net_sdl.c
  * @brief Networking module which uses SDL_net
  *
- * @defgroup net Networking code
+ * @defgroup netsdl Networking module utilizing SDL_net
  * @{
  */
 
@@ -80,6 +80,7 @@ static boolean AddressesEqual(IPaddress *a, IPaddress *b) {
  *  @param[in] addr
  *  @param[out] addr_table_size
  *  @param[out] addr_table
+ *  @returns The address requested, from the table.
  */
 static net_addr_t *NET_SDL_FindAddress(IPaddress *addr) {
     addrpair_t *new_entry;
@@ -138,6 +139,9 @@ static net_addr_t *NET_SDL_FindAddress(IPaddress *addr) {
     return &new_entry->net_addr;
 }
 
+/** @brief Frees an address from the address table from memory
+ *  @param[in] addr
+ */
 static void NET_SDL_FreeAddress(net_addr_t *addr) {
     int i;
 
@@ -151,6 +155,7 @@ static void NET_SDL_FreeAddress(net_addr_t *addr) {
 
     I_Error("NET_SDL_FreeAddress: Attempted to remove an unused address!");
 }
+
 
 static boolean NET_SDL_InitClient(void) {
     int p;
@@ -330,8 +335,9 @@ net_addr_t *NET_SDL_ResolveAddress(const char *address) {
     char *colon;
 
     colon = strchr(address, ':');
-
     addr_hostname = M_StringDuplicate(address);
+
+    // Split a string such as "127.0.0.1:666" into host and port.
     if (colon != NULL) {
         addr_hostname[colon - address] = '\0';
         addr_port = atoi(colon + 1);
@@ -345,7 +351,6 @@ net_addr_t *NET_SDL_ResolveAddress(const char *address) {
 
     if (result) {
         // unable to resolve
-
         return NULL;
     } else {
         return NET_SDL_FindAddress(&ip);

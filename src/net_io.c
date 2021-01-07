@@ -66,7 +66,9 @@ net_addr_t *NET_ResolveAddress(net_context_t *context, const char *addr) {
     return NULL;
 }
 
-void NET_SendPacket(net_addr_t *addr, net_packet_t *packet) { addr->module->SendPacket(addr, packet); }
+void NET_SendPacket(net_addr_t *addr, net_packet_t *packet) {
+    addr->module->SendPacket(addr, packet);
+}
 
 void NET_SendBroadcast(net_context_t *context, net_packet_t *packet) {
     int i;
